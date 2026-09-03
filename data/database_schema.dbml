@@ -128,7 +128,7 @@ Table coaches {
 
     coach_id bigint [pk]
 
-    coach_name varchar [not null]
+    coach_name varchar
 
     Note: '''
     Grain: one row per coach.

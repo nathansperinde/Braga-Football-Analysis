@@ -1,6 +1,7 @@
 # Environment variables and virtual environment
 .env
 .venv/
+.vscode/
 
 # Python generated files
 __pycache__/
