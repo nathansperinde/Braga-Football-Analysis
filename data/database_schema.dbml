@@ -1,34 +1,177 @@
-Table competitions {
-    league_id bigint [pk]
+// =========================================================
+// Braga Football Analysis
+// Analytical Database Schema
+// =========================================================
+//
+// Source: API-Football
+// Database: DuckDB
+//
+// The physical model stores reusable entities separately
+// while preserving match-level contextual relationships.
+//
+// Important modeling principle:
+// A player's current team is NOT an attribute of players.
+// Player-team relationships are determined by fixture-level
+// tables such as lineup_players and player_match_statistics.
+//
+// Planned DuckDB analytical views (not physical tables):
+//
+// - fixture_teams
+// - team_match_statistics_wide
+//
+// =========================================================
 
-    league_name varchar [not null]
+
+Project BragaFootballAnalysis {
+    database_type: 'DuckDB'
+
+    Note: '''
+    Analytical database for the Braga Football Analysis project.
+
+    The model combines relational normalization with an
+    analytics-oriented design.
+
+    Raw API-Football JSON remains preserved separately.
+    '''
+}
+
+
+// =========================================================
+// DIMENSIONS
+// =========================================================
+
+
+Table competitions {
+
+    competition_id bigint [pk]
+
+    competition_name varchar [not null]
+
     country varchar
 
     logo_url varchar
     flag_url varchar
+
+    Note: '''
+    Grain: one row per competition.
+
+    competition_id corresponds to league.id from API-Football.
+
+    Examples:
+    - Primeira Liga
+    - Taça de Portugal
+    - UEFA Europa League
+    - UEFA Champions League
+    '''
+}
+
+
+Table competition_seasons {
+
+    competition_id bigint [not null]
+
+    season integer [not null]
+
+    Note: '''
+    Grain: one row per competition + season.
+
+    Separating competition from competition season allows the
+    same competition to appear across multiple seasons without
+    duplicating competition-level attributes.
+    '''
+
+    indexes {
+        (competition_id, season) [pk]
+    }
 }
 
 
 Table teams {
+
     team_id bigint [pk]
 
     team_name varchar [not null]
+
     logo_url varchar
+
+    Note: '''
+    Grain: one row per team.
+
+    Team identity is independent from competition and season.
+    A team may participate in multiple competitions during the
+    same season.
+    '''
 }
 
 
 Table players {
+
     player_id bigint [pk]
 
     player_name varchar [not null]
+
+    Note: '''
+    Grain: one row per player.
+
+    team_id is deliberately NOT stored here.
+
+    A player may represent multiple teams across seasons or
+    even during the same season.
+
+    Player-team relationships are therefore stored in
+    fixture-level tables.
+    '''
 }
 
 
+Table coaches {
+
+    coach_id bigint [pk]
+
+    coach_name varchar [not null]
+
+    Note: '''
+    Grain: one row per coach.
+
+    team_id is deliberately NOT stored here because coaches
+    may change teams over time.
+
+    The coach-team relationship is determined through lineups.
+    '''
+}
+
+
+Table venues {
+
+    venue_id bigint [pk]
+
+    venue_name varchar
+
+    city varchar
+
+    Note: '''
+    Grain: one row per venue.
+
+    venue_id comes from the API when available.
+
+    Fixtures may contain a null venue_id when the source does
+    not provide a reliable venue identifier.
+    '''
+}
+
+
+// =========================================================
+// MATCH CORE
+// =========================================================
+
+
 Table fixtures {
+
     fixture_id bigint [pk]
 
-    league_id bigint [not null]
+    competition_id bigint [not null]
     season integer [not null]
+
     round varchar
 
     match_date timestamp
@@ -42,8 +185,6 @@ Table fixtures {
     referee varchar
 
     venue_id bigint
-    venue_name varchar
-    venue_city varchar
 
     home_team_id bigint [not null]
     away_team_id bigint [not null]
@@ -62,13 +203,30 @@ Table fixtures {
 
     penalty_home_goals integer
     penalty_away_goals integer
+
+    Note: '''
+    Grain: one row per fixture.
+
+    Central match-level entity.
+
+    Scores remain inside fixtures because they have a natural
+    one-to-one relationship with the match and are frequently
+    required in analytical queries.
+    '''
 }
 
 
+// =========================================================
+// MATCH EVENTS
+// =========================================================
+
+
 Table events {
-    event_id varchar [pk]
 
     fixture_id bigint [not null]
+
+    event_sequence integer [not null]
+
     team_id bigint
 
     player_id bigint
@@ -79,16 +237,66 @@ Table events {
 
     event_type varchar
     event_detail varchar
+
     comments varchar
+
+    Note: '''
+    Grain: one row per event occurrence.
+
+    API-Football does not provide a reliable unique event ID.
+
+    event_sequence is therefore generated during transformation
+    while preserving the original event ordering returned by
+    the API.
+
+    Examples:
+    - Goal
+    - Card
+    - substitution
+    - VAR
+    '''
+
+    indexes {
+        (fixture_id, event_sequence) [pk]
+    }
 }
 
 
+// =========================================================
+// TEAM MATCH PERFORMANCE
+// =========================================================
+
+
 Table team_match_statistics {
+
     fixture_id bigint [not null]
+
     team_id bigint [not null]
 
     statistic_type varchar [not null]
+
     statistic_value double
+
+    Note: '''
+    Grain:
+    one row per fixture + team + statistic type.
+
+    Stored in long format.
+
+    Examples:
+
+    Total Shots
+    Shots on Goal
+    Ball Possession
+    Corner Kicks
+    expected_goals
+
+    Percentage values are converted to numeric representations
+    during transformation.
+
+    A wide analytical DuckDB view will later expose frequently
+    used statistics as columns.
+    '''
 
     indexes {
         (fixture_id, team_id, statistic_type) [pk]
@@ -96,14 +304,26 @@ Table team_match_statistics {
 }
 
 
+// =========================================================
+// LINEUPS
+// =========================================================
+
+
 Table lineups {
+
     fixture_id bigint [not null]
+
     team_id bigint [not null]
+
+    coach_id bigint
 
     formation varchar
 
-    coach_id bigint
-    coach_name varchar
+    Note: '''
+    Grain: one row per fixture + team.
+
+    Represents the team-level tactical setup for a fixture.
+    '''
 
     indexes {
         (fixture_id, team_id) [pk]
@@ -112,15 +332,29 @@ Table lineups {
 
 
 Table lineup_players {
+
     fixture_id bigint [not null]
+
     team_id bigint [not null]
+
     player_id bigint [not null]
 
     player_number integer
+
     position varchar
+
     grid varchar
 
     starter boolean [not null]
+
+    Note: '''
+    Grain:
+    one row per fixture + team + player.
+
+    Includes starting players and substitutes.
+
+    Team membership is contextual to the fixture.
+    '''
 
     indexes {
         (fixture_id, team_id, player_id) [pk]
@@ -128,14 +362,25 @@ Table lineup_players {
 }
 
 
+// =========================================================
+// PLAYER MATCH PERFORMANCE
+// =========================================================
+
+
 Table player_match_statistics {
+
     fixture_id bigint [not null]
+
     player_id bigint [not null]
+
     team_id bigint [not null]
 
     minutes integer
+
     player_number integer
+
     position varchar
+
     rating double
 
     captain boolean
@@ -143,34 +388,78 @@ Table player_match_statistics {
 
     offsides integer
 
+    // -----------------------------------------------------
+    // Shots
+    // -----------------------------------------------------
+
     shots_total integer
     shots_on integer
+
+
+    // -----------------------------------------------------
+    // Goals
+    // -----------------------------------------------------
 
     goals_total integer
     goals_conceded integer
     goals_assists integer
     goals_saves integer
 
+
+    // -----------------------------------------------------
+    // Passing
+    // -----------------------------------------------------
+
     passes_total integer
     passes_key integer
     passes_accuracy double
+
+
+    // -----------------------------------------------------
+    // Tackles
+    // -----------------------------------------------------
 
     tackles_total integer
     tackles_blocks integer
     tackles_interceptions integer
 
+
+    // -----------------------------------------------------
+    // Duels
+    // -----------------------------------------------------
+
     duels_total integer
     duels_won integer
+
+
+    // -----------------------------------------------------
+    // Dribbling
+    // -----------------------------------------------------
 
     dribbles_attempts integer
     dribbles_success integer
     dribbles_past integer
 
+
+    // -----------------------------------------------------
+    // Fouls
+    // -----------------------------------------------------
+
     fouls_drawn integer
     fouls_committed integer
 
+
+    // -----------------------------------------------------
+    // Cards
+    // -----------------------------------------------------
+
     cards_yellow integer
     cards_red integer
+
+
+    // -----------------------------------------------------
+    // Penalties
+    // -----------------------------------------------------
 
     penalty_won integer
     penalty_committed integer
@@ -178,65 +467,189 @@ Table player_match_statistics {
     penalty_missed integer
     penalty_saved integer
 
+    Note: '''
+    Grain:
+    one row per fixture + player.
+
+    player_match_statistics remains in wide format because all
+    metrics describe the same analytical observation:
+
+        one player's performance in one fixture.
+
+    team_id identifies the team represented by the player in
+    that specific fixture.
+
+    A player may therefore appear for different teams across
+    the dataset without changing the players dimension.
+    '''
+
     indexes {
         (fixture_id, player_id) [pk]
     }
 }
 
 
-// ---------------------------------------------------------
+// =========================================================
 // RELATIONSHIPS
+// =========================================================
+
+
+// ---------------------------------------------------------
+// Competition hierarchy
 // ---------------------------------------------------------
 
-// Competition -> Fixtures
-Ref: fixtures.league_id > competitions.league_id
+Ref:
+    competition_seasons.competition_id
+    > competitions.competition_id
 
 
-// Teams -> Fixtures
-Ref: fixtures.home_team_id > teams.team_id
-Ref: fixtures.away_team_id > teams.team_id
+// Fixture belongs to a specific competition + season
+
+Ref:
+    fixtures.(competition_id, season)
+    > competition_seasons.(competition_id, season)
 
 
-// Fixture -> Events
-Ref: events.fixture_id > fixtures.fixture_id
+// ---------------------------------------------------------
+// Fixture teams
+// ---------------------------------------------------------
 
-// Team -> Events
-Ref: events.team_id > teams.team_id
+Ref:
+    fixtures.home_team_id
+    > teams.team_id
 
-// Players -> Events
-Ref: events.player_id > players.player_id
-Ref: events.assist_id > players.player_id
-
-
-// Fixture -> Team Statistics
-Ref: team_match_statistics.fixture_id > fixtures.fixture_id
-
-// Team -> Team Statistics
-Ref: team_match_statistics.team_id > teams.team_id
+Ref:
+    fixtures.away_team_id
+    > teams.team_id
 
 
-// Fixture -> Lineups
-Ref: lineups.fixture_id > fixtures.fixture_id
+// ---------------------------------------------------------
+// Venue
+// ---------------------------------------------------------
 
-// Team -> Lineups
-Ref: lineups.team_id > teams.team_id
-
-
-// Fixture -> Lineup Players
-Ref: lineup_players.fixture_id > fixtures.fixture_id
-
-// Team -> Lineup Players
-Ref: lineup_players.team_id > teams.team_id
-
-// Player -> Lineup Players
-Ref: lineup_players.player_id > players.player_id
+Ref:
+    fixtures.venue_id
+    > venues.venue_id
 
 
-// Fixture -> Player Statistics
-Ref: player_match_statistics.fixture_id > fixtures.fixture_id
+// ---------------------------------------------------------
+// Events
+// ---------------------------------------------------------
 
-// Team -> Player Statistics
-Ref: player_match_statistics.team_id > teams.team_id
+Ref:
+    events.fixture_id
+    > fixtures.fixture_id
 
-// Player -> Player Statistics
-Ref: player_match_statistics.player_id > players.player_id
+Ref:
+    events.team_id
+    > teams.team_id
+
+Ref:
+    events.player_id
+    > players.player_id
+
+Ref:
+    events.assist_id
+    > players.player_id
+
+
+// ---------------------------------------------------------
+// Team statistics
+// ---------------------------------------------------------
+
+Ref:
+    team_match_statistics.fixture_id
+    > fixtures.fixture_id
+
+Ref:
+    team_match_statistics.team_id
+    > teams.team_id
+
+
+// ---------------------------------------------------------
+// Lineups
+// ---------------------------------------------------------
+
+Ref:
+    lineups.fixture_id
+    > fixtures.fixture_id
+
+Ref:
+    lineups.team_id
+    > teams.team_id
+
+Ref:
+    lineups.coach_id
+    > coaches.coach_id
+
+
+// ---------------------------------------------------------
+// Lineup players
+// ---------------------------------------------------------
+
+Ref:
+    lineup_players.fixture_id
+    > fixtures.fixture_id
+
+Ref:
+    lineup_players.team_id
+    > teams.team_id
+
+Ref:
+    lineup_players.player_id
+    > players.player_id
+
+
+// ---------------------------------------------------------
+// Player statistics
+// ---------------------------------------------------------
+
+Ref:
+    player_match_statistics.fixture_id
+    > fixtures.fixture_id
+
+Ref:
+    player_match_statistics.team_id
+    > teams.team_id
+
+Ref:
+    player_match_statistics.player_id
+    > players.player_id
+
+
+// =========================================================
+// VISUAL GROUPS
+// =========================================================
+
+
+TableGroup Dimensions {
+
+    competitions
+    competition_seasons
+
+    teams
+    players
+    coaches
+    venues
+}
+
+
+TableGroup Match_Core {
+
+    fixtures
+}
+
+
+TableGroup Match_Details {
+
+    events
+    lineups
+    lineup_players
+}
+
+
+TableGroup Performance {
+
+    team_match_statistics
+    player_match_statistics
+}

@@ -1,15 +1,391 @@
 {
   "version": "3.0.0",
-  "darkMode": false,
+  "darkMode": true,
   "gridEnabling": false,
   "currentViewName": null,
   "defaultView": {
     "detailLevel": "All",
     "relationshipMode": "All",
-    "tablePositions": [],
+    "tablePositions": [
+      {
+        "name": "competition_seasons",
+        "schemaName": "public",
+        "x": 12,
+        "y": 12
+      },
+      {
+        "name": "teams",
+        "schemaName": "public",
+        "x": 12,
+        "y": 186
+      },
+      {
+        "name": "players",
+        "schemaName": "public",
+        "x": 12,
+        "y": 360
+      },
+      {
+        "name": "coaches",
+        "schemaName": "public",
+        "x": 12,
+        "y": 676
+      },
+      {
+        "name": "venues",
+        "schemaName": "public",
+        "x": 12,
+        "y": 502
+      },
+      {
+        "name": "fixtures",
+        "schemaName": "public",
+        "x": 566.25732421875,
+        "y": 95
+      },
+      {
+        "name": "events",
+        "schemaName": "public",
+        "x": 1173.810546875,
+        "y": 12
+      },
+      {
+        "name": "team_match_statistics",
+        "schemaName": "public",
+        "x": 1173.810546875,
+        "y": 410
+      },
+      {
+        "name": "lineups",
+        "schemaName": "public",
+        "x": 1173.810546875,
+        "y": 616
+      },
+      {
+        "name": "lineup_players",
+        "schemaName": "public",
+        "x": 1173.810546875,
+        "y": 822
+      },
+      {
+        "name": "player_match_statistics",
+        "schemaName": "public",
+        "x": 1173.810546875,
+        "y": 1124
+      },
+      {
+        "name": "competitions",
+        "schemaName": "public",
+        "x": 12,
+        "y": 2358
+      }
+    ],
     "tableGroupCollapseStates": [],
     "stickyNoteLayouts": [],
-    "referencePaths": []
+    "referencePaths": [
+      {
+        "firstFieldNames": [
+          "competition_id",
+          "season"
+        ],
+        "firstTableName": "fixtures",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "competition_id",
+          "season"
+        ],
+        "secondTableName": "competition_seasons",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "home_team_id"
+        ],
+        "firstTableName": "fixtures",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "team_id"
+        ],
+        "secondTableName": "teams",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "away_team_id"
+        ],
+        "firstTableName": "fixtures",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "team_id"
+        ],
+        "secondTableName": "teams",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "venue_id"
+        ],
+        "firstTableName": "fixtures",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "venue_id"
+        ],
+        "secondTableName": "venues",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "fixture_id"
+        ],
+        "firstTableName": "events",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "fixture_id"
+        ],
+        "secondTableName": "fixtures",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "team_id"
+        ],
+        "firstTableName": "events",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "team_id"
+        ],
+        "secondTableName": "teams",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "player_id"
+        ],
+        "firstTableName": "events",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "player_id"
+        ],
+        "secondTableName": "players",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "assist_id"
+        ],
+        "firstTableName": "events",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "player_id"
+        ],
+        "secondTableName": "players",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "fixture_id"
+        ],
+        "firstTableName": "team_match_statistics",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "fixture_id"
+        ],
+        "secondTableName": "fixtures",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "team_id"
+        ],
+        "firstTableName": "team_match_statistics",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "team_id"
+        ],
+        "secondTableName": "teams",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "fixture_id"
+        ],
+        "firstTableName": "lineups",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "fixture_id"
+        ],
+        "secondTableName": "fixtures",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "team_id"
+        ],
+        "firstTableName": "lineups",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "team_id"
+        ],
+        "secondTableName": "teams",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "coach_id"
+        ],
+        "firstTableName": "lineups",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "coach_id"
+        ],
+        "secondTableName": "coaches",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "fixture_id"
+        ],
+        "firstTableName": "lineup_players",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "fixture_id"
+        ],
+        "secondTableName": "fixtures",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "team_id"
+        ],
+        "firstTableName": "lineup_players",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "team_id"
+        ],
+        "secondTableName": "teams",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "player_id"
+        ],
+        "firstTableName": "lineup_players",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "player_id"
+        ],
+        "secondTableName": "players",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "fixture_id"
+        ],
+        "firstTableName": "player_match_statistics",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "fixture_id"
+        ],
+        "secondTableName": "fixtures",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "team_id"
+        ],
+        "firstTableName": "player_match_statistics",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "team_id"
+        ],
+        "secondTableName": "teams",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "player_id"
+        ],
+        "firstTableName": "player_match_statistics",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "player_id"
+        ],
+        "secondTableName": "players",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "competition_id"
+        ],
+        "firstTableName": "competition_seasons",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "competition_id"
+        ],
+        "secondTableName": "competitions",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      }
+    ]
   },
   "views": {}
 }
