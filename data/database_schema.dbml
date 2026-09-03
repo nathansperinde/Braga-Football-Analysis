@@ -1,0 +1,242 @@
+Table competitions {
+    league_id bigint [pk]
+
+    league_name varchar [not null]
+    country varchar
+
+    logo_url varchar
+    flag_url varchar
+}
+
+
+Table teams {
+    team_id bigint [pk]
+
+    team_name varchar [not null]
+    logo_url varchar
+}
+
+
+Table players {
+    player_id bigint [pk]
+
+    player_name varchar [not null]
+}
+
+
+Table fixtures {
+    fixture_id bigint [pk]
+
+    league_id bigint [not null]
+    season integer [not null]
+    round varchar
+
+    match_date timestamp
+    match_timestamp bigint
+    timezone varchar
+
+    status_short varchar
+    status_long varchar
+    elapsed integer
+
+    referee varchar
+
+    venue_id bigint
+    venue_name varchar
+    venue_city varchar
+
+    home_team_id bigint [not null]
+    away_team_id bigint [not null]
+
+    home_goals integer
+    away_goals integer
+
+    halftime_home_goals integer
+    halftime_away_goals integer
+
+    fulltime_home_goals integer
+    fulltime_away_goals integer
+
+    extratime_home_goals integer
+    extratime_away_goals integer
+
+    penalty_home_goals integer
+    penalty_away_goals integer
+}
+
+
+Table events {
+    event_id varchar [pk]
+
+    fixture_id bigint [not null]
+    team_id bigint
+
+    player_id bigint
+    assist_id bigint
+
+    time_elapsed integer
+    time_extra integer
+
+    event_type varchar
+    event_detail varchar
+    comments varchar
+}
+
+
+Table team_match_statistics {
+    fixture_id bigint [not null]
+    team_id bigint [not null]
+
+    statistic_type varchar [not null]
+    statistic_value double
+
+    indexes {
+        (fixture_id, team_id, statistic_type) [pk]
+    }
+}
+
+
+Table lineups {
+    fixture_id bigint [not null]
+    team_id bigint [not null]
+
+    formation varchar
+
+    coach_id bigint
+    coach_name varchar
+
+    indexes {
+        (fixture_id, team_id) [pk]
+    }
+}
+
+
+Table lineup_players {
+    fixture_id bigint [not null]
+    team_id bigint [not null]
+    player_id bigint [not null]
+
+    player_number integer
+    position varchar
+    grid varchar
+
+    starter boolean [not null]
+
+    indexes {
+        (fixture_id, team_id, player_id) [pk]
+    }
+}
+
+
+Table player_match_statistics {
+    fixture_id bigint [not null]
+    player_id bigint [not null]
+    team_id bigint [not null]
+
+    minutes integer
+    player_number integer
+    position varchar
+    rating double
+
+    captain boolean
+    substitute boolean
+
+    offsides integer
+
+    shots_total integer
+    shots_on integer
+
+    goals_total integer
+    goals_conceded integer
+    goals_assists integer
+    goals_saves integer
+
+    passes_total integer
+    passes_key integer
+    passes_accuracy double
+
+    tackles_total integer
+    tackles_blocks integer
+    tackles_interceptions integer
+
+    duels_total integer
+    duels_won integer
+
+    dribbles_attempts integer
+    dribbles_success integer
+    dribbles_past integer
+
+    fouls_drawn integer
+    fouls_committed integer
+
+    cards_yellow integer
+    cards_red integer
+
+    penalty_won integer
+    penalty_committed integer
+    penalty_scored integer
+    penalty_missed integer
+    penalty_saved integer
+
+    indexes {
+        (fixture_id, player_id) [pk]
+    }
+}
+
+
+// ---------------------------------------------------------
+// RELATIONSHIPS
+// ---------------------------------------------------------
+
+// Competition -> Fixtures
+Ref: fixtures.league_id > competitions.league_id
+
+
+// Teams -> Fixtures
+Ref: fixtures.home_team_id > teams.team_id
+Ref: fixtures.away_team_id > teams.team_id
+
+
+// Fixture -> Events
+Ref: events.fixture_id > fixtures.fixture_id
+
+// Team -> Events
+Ref: events.team_id > teams.team_id
+
+// Players -> Events
+Ref: events.player_id > players.player_id
+Ref: events.assist_id > players.player_id
+
+
+// Fixture -> Team Statistics
+Ref: team_match_statistics.fixture_id > fixtures.fixture_id
+
+// Team -> Team Statistics
+Ref: team_match_statistics.team_id > teams.team_id
+
+
+// Fixture -> Lineups
+Ref: lineups.fixture_id > fixtures.fixture_id
+
+// Team -> Lineups
+Ref: lineups.team_id > teams.team_id
+
+
+// Fixture -> Lineup Players
+Ref: lineup_players.fixture_id > fixtures.fixture_id
+
+// Team -> Lineup Players
+Ref: lineup_players.team_id > teams.team_id
+
+// Player -> Lineup Players
+Ref: lineup_players.player_id > players.player_id
+
+
+// Fixture -> Player Statistics
+Ref: player_match_statistics.fixture_id > fixtures.fixture_id
+
+// Team -> Player Statistics
+Ref: player_match_statistics.team_id > teams.team_id
+
+// Player -> Player Statistics
+Ref: player_match_statistics.player_id > players.player_id
